@@ -3,10 +3,12 @@
 # =========================
 FROM python:3.11-alpine AS builder
 
-# Install pipenv dependencies (build stage)
+# Install build dependencies
+RUN apk add --no-cache gcc musl-dev libffi-dev
+
 WORKDIR /app
 
-# Copy requirements and install in a temporary directory
+# Install Python dependencies into /install
 COPY requirements.txt .
 RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
@@ -18,20 +20,19 @@ COPY . .
 # =========================
 FROM python:3.11-alpine
 
-# Set working directory
 WORKDIR /app
 
 # Copy Python packages from builder
 COPY --from=builder /install /usr/local
 
-# Copy app code from builder
+# Copy app code
 COPY --from=builder /app /app
 
 # OpenShift: make app writable by random UID
-RUN chown -R 1001:0 /app && chmod -R g+rw /app
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup && \
+    chown -R appuser:appgroup /app
 
-# Use non-root OpenShift user
-USER 1001
+USER appuser
 
 # Expose FastAPI port
 EXPOSE 8080
