@@ -1,0 +1,27 @@
+# k8s/deployment.yaml (example)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fastapi
+  labels:
+    app: fastapi
+spec:
+  replicas: 2   # initial replicas
+  selector:
+    matchLabels:
+      app: fastapi
+  template:
+    metadata:
+      labels:
+        app: fastapi
+    spec:
+      containers:
+      - name: fastapi
+        image: image-registry.openshift-image-registry.svc:5000/fastapi-demo/fastapi:latest
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            cpu: 100m
+          limits:
+            cpu: 500m
